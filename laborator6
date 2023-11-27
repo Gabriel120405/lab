@@ -1,0 +1,235 @@
+#include<bits/stdc++.h>
+
+using namespace std;
+
+// Node class representing a node in a binary tree
+class Node {
+public:
+    int data;
+    Node *left, *right;
+
+    Node(int data) {
+        this->data = data;
+        this->left = NULL;
+        this->right = NULL;
+    }
+};
+
+// Function to build a binary tree based on user input
+Node* buildTree() {
+    int data;
+    cout << "Enter the value of the root node: ";
+    cin >> data;
+
+    Node* root = new Node(data);
+    queue<Node*> q;
+    q.push(root);
+
+    string terminationCommand = "exit";
+
+    while (!q.empty()) {
+        Node* current = q.front();
+        q.pop();
+
+        string leftInput, rightInput;
+
+        // Input for the left child
+        cout << "Enter left child of " << current->data << ": ";
+        cin >> leftInput;
+        if (leftInput != terminationCommand && leftInput != "-") {
+            int leftData;
+            stringstream(leftInput) >> leftData;
+            current->left = new Node(leftData);
+            q.push(current->left);
+        } else if (leftInput != terminationCommand && leftInput == "-") {
+            current->left = NULL;
+        } else {
+            break;
+        }
+
+        // Input for the right child
+        cout << "Enter right child of " << current->data << ": ";
+        cin >> rightInput;
+        if (rightInput != terminationCommand && rightInput != "-") {
+            int rightData;
+            stringstream(rightInput) >> rightData;
+            current->right = new Node(rightData);
+            q.push(current->right);
+        } else if (rightInput != terminationCommand && rightInput == "-") {
+            current->right = NULL;
+        } else {
+            break;
+        }
+    }
+
+    return root;
+}
+
+// Function to calculate the height of a binary tree
+int heightOfTree(Node* root) {
+    if (root == NULL)
+        return 0;
+    else {
+        int leftHeight = heightOfTree(root->left);
+        int rightHeight = heightOfTree(root->right);
+
+        return max(leftHeight, rightHeight) + 1;
+    }
+}
+
+// Function to print the binary tree like a matrix
+void printMatrix(Node* root, vector<vector<string> >& matrix, int row, int col, int level) {
+    if (root == NULL)
+        return;
+
+    stringstream ss;
+    ss << root->data;
+    matrix[row][col] = ss.str();
+
+    int space = level / 2;
+
+    if (root->left != NULL) {
+        matrix[row + 1][col - space] = "/";
+        printMatrix(root->left, matrix, row + 2, col - space, level / 2);
+    }
+
+    if (root->right != NULL) {
+        matrix[row + 1][col + space] = "\\";
+        printMatrix(root->right, matrix, row + 2, col + space, level / 2);
+    }
+}
+
+// Wrapper function to print the binary tree
+void printMatrixTree(Node* root) {
+    int treeHeight = heightOfTree(root);
+    int width = pow(2, treeHeight + 1);
+
+    vector<vector<string> > matrix(treeHeight * 2, vector<string>(width, " "));
+
+    printMatrix(root, matrix, 0, width / 2, width / 4);
+
+    for (int i = 0; i < treeHeight * 2; ++i) {
+        for (int j = 0; j < width; ++j) {
+            cout << matrix[i][j];
+        }
+        cout << endl;
+    }
+}
+
+// Function to count the number of leaf nodes in a binary tree
+int countLeafNodes(Node* root) {
+    if (root == NULL)
+        return 0;
+    if (root->left == NULL && root->right == NULL)
+        return 1;
+    else
+        return countLeafNodes(root->left) + countLeafNodes(root->right);
+}
+
+// Function to find the Lowest Common Ancestor (LCA) of two nodes in a binary tree
+Node* lowestCommonAncestor(Node* root, int node1, int node2) {
+    if (root == NULL)
+        return NULL;
+
+    if (root->data == node1 || root->data == node2)
+        return root;
+
+    Node* leftLCA = lowestCommonAncestor(root->left, node1, node2);
+    Node* rightLCA = lowestCommonAncestor(root->right, node1, node2);
+
+    if (leftLCA && rightLCA)
+        return root;
+
+    return (leftLCA != NULL) ? leftLCA : rightLCA;
+}
+
+// Function for in-order traversal of a binary tree and storing the result in a vector
+void inOrderTraversal(Node* root, vector<int>& result) {
+    if (root == NULL)
+        return;
+        inOrderTraversal(root->left, result);
+    result.push_back(root->data);
+    inOrderTraversal(root->right, result);
+}
+
+// Function to check if a binary tree is a Binary Search Tree (BST)
+bool isBSTUtil(Node* root, int& prev) {
+    if (root == NULL)
+        return true;
+
+    if (!isBSTUtil(root->left, prev))
+        return false;
+
+    if (root->data <= prev)
+        return false;
+
+    prev = root->data;
+
+    return isBSTUtil(root->right, prev);
+}
+
+// Function to check if a binary tree is a Binary Search Tree (BST)
+bool isBST(Node* root) {
+    int prev = INT_MIN;
+    return isBSTUtil(root, prev);
+}
+
+int main() {
+    Node* root = NULL;
+    int choice = 0;
+
+    // Handling deletion of the existing tree
+    if (root != NULL) {
+        delete root;
+        root = NULL;
+    }
+    // Building a new binary tree
+    root = buildTree();
+
+    // Checking if the tree is empty
+    if (root == NULL) {
+        cout << "Binary tree is empty. Please create a binary tree first!\n";
+    } else {
+        // Printing the binary tree like a matrix
+        cout << "\nBinary tree matrix representation:\n";
+        printMatrixTree(root);
+
+        // Calculating and displaying the height of the binary tree
+        int treeHeight = heightOfTree(root);
+        cout << "\nHeight of the binary tree: " << treeHeight << endl;
+
+        // Counting and displaying the number of leaf nodes in the binary tree
+        int leafNodes = countLeafNodes(root);
+        cout << "Number of leaf nodes: " << leafNodes << endl;
+
+        // Finding and displaying the Lowest Common Ancestor (LCA) of two nodes
+        int node1, node2;
+        cout << "Enter value of the first node: ";
+        cin >> node1;
+        cout << "Enter value of the second node: ";
+        cin >> node2;
+        Node* lca = lowestCommonAncestor(root, node1, node2);
+        if (lca != NULL) {
+            cout << "Lowest Common Ancestor of " << node1 << " and " << node2 << " is: " << lca->data << endl;
+        } else {
+            cout << "Nodes not found in the tree." << endl;
+        }
+
+        // In-order traversal and displaying the result
+        vector<int> inOrderResult;
+        inOrderTraversal(root, inOrderResult);
+        cout << "In-order traversal: ";
+        for (size_t i = 0; i < inOrderResult.size(); ++i) {
+            cout << inOrderResult[i] << " ";
+        }
+        cout << endl;
+
+        // Checking and displaying if the binary tree is a Binary Search Tree (BST)
+        if (isBST(root))
+            cout << "The binary tree is a Binary Search Tree.\n";
+        else
+            cout << "The binary tree is not a Binary Search Tree.\n";
+    }
+
+    return 0;
+}
